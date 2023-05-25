@@ -1,19 +1,12 @@
 import React from "react";
-import { Helmet } from "react-helmet";
-import HeaderDefault from "../../../components/header/HeaderDefault";
-import CopyRight from "../../../components/footer/copyright/CopyRight";
-import Footer from "../../../components/footer/Footer";
-import PortfolioListing from "../../../components/portfolio/PortfolioListing";
+import QnABody from "../../../components/dalrun-jw/qna/QnABody";
 
 const WorksListing = () => {
   return (
     <div className="ptf-site-wrapper animsition ptf-is--works-listing">
-      <Helmet>
-        <title>Moonex - Works/Portfolio Listing</title>
-      </Helmet>
+        <title>달런 달런</title>
       {/* End Page SEO Content */}
       <div className="ptf-site-wrapper__inner">
-        <HeaderDefault />
         {/* End  HeaderHomeDefault */}
 
         <div className="main">
@@ -34,7 +27,7 @@ const WorksListing = () => {
                       data-aos="fade"
                       data-aos-delay="0"
                     >
-                      <h1 className="large-heading">Portfolio</h1>
+                      <h1 className="large-heading">QnA</h1>
                     </div>
                   </div>
                 </div>
@@ -50,7 +43,6 @@ const WorksListing = () => {
                 Start Portfolio main 
                 ============================================== */}
               <div className="container-xxl">
-                <PortfolioListing />
               </div>
               {/* <!--Spacer--> */}
               <div
@@ -86,10 +78,8 @@ const WorksListing = () => {
       <footer className="ptf-footer ptf-footer--style-1">
         <div className="container-xxl">
           <div className="ptf-footer__top">
-            <Footer />
           </div>
           <div className="ptf-footer__bottom">
-            <CopyRight />
           </div>
         </div>
       </footer>

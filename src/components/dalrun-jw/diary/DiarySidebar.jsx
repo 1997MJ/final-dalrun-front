@@ -1,36 +1,79 @@
-﻿import React, { useState, useMemo } from 'react';
-import ReactDOM from 'react-dom';
+﻿import React, { useState } from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import ModalPortal from "../Portal";
-import Modal from "../ModalFrame";
+import { Link, useNavigate } from 'react-router-dom';
+import UploadModal from './UploadModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleUser, faRoute } from '@fortawesome/free-solid-svg-icons';
+import { faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
 import '../../../assets/dalrun-jw/scss/_modal.scss'
 
+
 const DiarySidebar = () => {
+  const loginData = JSON.parse(localStorage.getItem("login"));
+  let memId = null;
+  if(loginData){
+    memId = loginData.memId;
+  }
+
+  const [searchActive, setSearchActive] = useState(false);
+
+  const loginAlert = ( (event) => {
+    if(!loginData){
+      event.preventDefault();
+      alert('로그인이 필요합니다.');
+    } else {
+      setSearchActive(!searchActive);
+    }
+  });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const handleModal = (e) => {
+    if(loginData){
+      setModalOpen(true);
+    } else { 
+      e.preventDefault();
+      alert('로그인이 필요합니다.');
+    }
+  };
+  const closeModal = () => setModalOpen(false);
+
   return (
 
     <header className='diary-navbar-container'>
 
       <Link to="/" title="Home" className='logo-Link'>
-        <img src="logo.svg" className='logo'/>
+        <img src="dalrun_logo.png" className='logo'/>
       </Link>
       <nav className='head-nav'>
         <ul>
           <li className='nav-item'>
-            <Link to="/" title='내 기록'>
-              <img src="assets/img/dalrun-jw/person-circle.svg"/>
+            <Link to={searchActive ? `?search=${memId}` : '/diary'} title='내 기록' onClick={loginAlert}>
+              <FontAwesomeIcon icon={faCircleUser} size='xl' style={{color:"#74EABC"}} />
               <span>내 기록</span>
             </Link>
           </li>
           <li className='nav-item'>
-            <UploadModal/>
+            <button onClick={handleModal} >
+              <FontAwesomeIcon icon={faCloudArrowUp} size="xl" style={{color:"#74EABC"}}/>
+              <span>업로드</span>
+            </button>
+            <UploadModal open={modalOpen} close={closeModal}/>
           </li>
           <li className='nav-item'>
             <Link to="/">
-              <img src="assets/img/dalrun-jw/question-circle-fill.svg"/>
+              <FontAwesomeIcon icon={faCircleQuestion} size="xl" style={{color:"#74EABC"}}/>
               <span>업로드</span>
               <span style={{marginTop:'0', marginRight:'0.2rem'}}>방법</span>
             </Link>
+          </li>
+          <li className='nav-item'>
+            <div style={{justifyItems:'center', paddingTop:'1rem'}}>
+              <Link to="/course">
+                <FontAwesomeIcon icon={faRoute} size="xl" style={{color:"#74EABC"}} />
+                <span>코스</span>
+              </Link>
+            </div>
           </li>
         </ul>
         <div className='dropup-container'>
@@ -41,88 +84,64 @@ const DiarySidebar = () => {
 
   );
 }
-export default DiarySidebar
+export default DiarySidebar;
 
 // 프로필 드롭업
 function MyDropdown() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const loginData = JSON.parse(localStorage.getItem("login"));
+  let profileImg = null;
+  let isLogin = false;
+  
+  if(loginData){
+    profileImg = loginData.profile;
+    isLogin = true;
+  }
+  // console.log(profileImg);
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+
+  const handleLogout = ( () => {
+    localStorage.removeItem("login");
+    alert('로그아웃 되었습니다.');
+  });
+
+  const renderProfileImg = () => {
+    if (profileImg) {
+      return (
+        <img
+          src={`http://localhost:3000/dalrun-yr/profiles/${profileImg}`}
+          alt='mdo'
+          width='30'
+          height='30'
+          className='rounded-circle'
+        />
+      );
+    } else {
+      return (
+        <FontAwesomeIcon icon={faCircleUser} size="xl" />
+      );
+    }
+  };
 
   return (
 
     <Dropdown show={dropdownOpen} onToggle={toggleDropdown}>
-      <Dropdown.Toggle id="dropdown" style={{ width: '100%', backgroundColor: 'transparent', border: 'none' }}>
-        <img src='https://github.com/mdo.png' alt='mdo' width='24' height='24' className='rounded-circle' />
+      <Dropdown.Toggle id="dropdown" style={{ width: '100%', backgroundColor: 'transparent', border: 'none', marginLeft: 'auto' }}>
+        {renderProfileImg()}
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-        <Dropdown.Item href="#/action-1">마이페이지</Dropdown.Item>
-        <Dropdown.Item href="#/action-2">로그아웃</Dropdown.Item>
+        {isLogin ? (
+          <>
+            <Dropdown.Item href="#/action-1">마이페이지</Dropdown.Item>
+            <Dropdown.Item onClick={handleLogout}>로그아웃</Dropdown.Item>
+          </>
+        ) : (
+          <Dropdown.Item href="/login">로그인</Dropdown.Item>
+        )}
       </Dropdown.Menu>
     </Dropdown>
 
   );
 } // <MYDropdown/>
-
-function UploadModal() {
-
-    // useState를 사용하여 open상태를 변경한다. (open일때 true로 만들어 열리는 방식)
-    const [modalOpen, setModalOpen] = useState(false);
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [file, setFile] = useState(null);
-
-    const handleModal = () => {
-      setModalOpen(true);
-    };
-    const closeModal = () => {
-      setModalOpen(false);
-    };
-
-    const handleTitleChange = (e) => {
-      setTitle(e.target.value);
-    };
-    const handleContentChange = (e) => {
-      setContent(e.target.value);
-    };
-    const handleFileChange = (e) =>{
-      setFile(e.target.files[0]);
-    };
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      // 입력된 정보와 파일을 서버로 보내는 작업을 구현합니다.
-      // 이후 모달을 닫는 등의 추가 작업을 수행합니다.
-      closeModal();
-    };
-
-    return (
-      <React.Fragment>
-        <button onClick={handleModal} style={{ backgroundColor: "#343a40", border: 0 }}>
-          <img src="assets/img/dalrun-jw/file-earmark-arrow-up-fill.svg" />
-          <span>업로드</span>
-        </button>
-        <ModalPortal>
-          {modalOpen && (
-            <Modal open={modalOpen} close={closeModal} header="다이어리 업로드">
-              <form onSubmit={handleSubmit}>
-                <label>
-                  제목:
-                  <input type="text" value={title} onChange={handleTitleChange} autoFocus/>
-                </label>
-                <label>
-                  내용:
-                  <textarea value={content} onChange={handleContentChange} />
-                </label>
-                <label>
-                  파일 업로드:<input type="file" onChange={handleFileChange} />
-                </label>
-                <button type="submit">업로드</button>
-              </form>
-            </Modal>
-          )}
-        </ModalPortal>
-      </React.Fragment>
-    );
-} // <UpploadModal/>

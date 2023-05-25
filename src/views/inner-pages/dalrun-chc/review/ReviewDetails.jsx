@@ -1,25 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+
 import { Helmet } from "react-helmet";
-import HeaderDefault from "../../../../components/header/HeaderDefault";
-import CopyRight from "../../../../components/footer/copyright/CopyRight";
-import Footer from "../../../../components/footer/Footer";
+import HeadermainPage from "../../../../components/dalrun-jy/HeadermainPage";import CopyRight from "../../../../components/dalrun-jy/footer/CopyRight";
+
 import Social from "../../../../components/social/Social";
 // import WorksCaseStudy from "./WorksCaseStudy";
 import ImageGridThree from "../../../../components/image-grid/ImageGridThree";
 
+import ReviewDetails2Row from "../../../../components/dalrun-hc/reviewdetails/ReviewDetails2Row";
 import BlogComment from "../../../../components/dalrun-hc/reviewdetails/BlogComment";
 import BlogCommentForm from "../../../../components/dalrun-hc/reviewdetails/BlogCommentForm";
 
+import { Provider } from "react-redux";
+import configReduxStore from "../redux/configReduxStore";
 
-const WorksShowcase = () => {
+
+
+const ReviewDetails = () => {
+  let reviewDetailParams = useParams();
+  console.log("  ReviewDetails.jsx]]  let reviewDetailParams = useParams(); ", reviewDetailParams)
+
+
+
+
   return (
+    
     <div className="ptf-site-wrapper animsition ptf-is--work-showcase-1">
+      {/* <button onClick={() => {reviewSeqDispatch({ type: "namePageReview", payload: 2})}}></button> */}
       <Helmet>
         <title>REVIEW DETAILS</title>
       </Helmet>
       {/* End Page SEO Content */}
       <div className="ptf-site-wrapper__inner">
-        <HeaderDefault />
+        <HeadermainPage />
         {/* End  HeaderHomeDefault */}
 
         <div className="main">
@@ -69,6 +85,17 @@ const WorksShowcase = () => {
                 style={{ "--ptf-xxl": "2.25rem", "--ptf-md": "1rem" }}
               ></div>
             </section>
+
+
+            
+            <section>
+              <Provider store={configReduxStore}>
+                <ReviewDetails2Row />
+                <ReviewSeqDispatch />
+              </Provider>
+            </section>
+
+
 
             <section>
               <div className="container-xxl">
@@ -343,9 +370,7 @@ const WorksShowcase = () => {
       {/* <!--Footer--> */}
       <footer className="ptf-footer ptf-footer--style-1">
         <div className="container-xxl">
-          <div className="ptf-footer__top">
-            <Footer />
-          </div>
+         
           <div className="ptf-footer__bottom">
             <CopyRight />
           </div>
@@ -356,4 +381,22 @@ const WorksShowcase = () => {
   );
 };
 
-export default WorksShowcase;
+
+const ReviewSeqDispatch = () => {
+  let reviewDetailParams = useParams();
+  console.log("  @@@ReviewDetails.jsx]]  let reviewDetailParams = useParams(); ", reviewDetailParams)
+  console.log("  @@@ReviewDetails.jsx]]  let reviewDetailParams = useParams(); ", reviewDetailParams.shoereviewdetailSeq)
+  const reviewSeqDispatch = useDispatch();
+
+  useEffect (() => {
+    reviewSeqDispatch({ type: "namePageReview/pageDetailSeq", seq: reviewDetailParams.shoereviewdetailSeq})
+  }, [reviewDetailParams])
+
+  // return (
+  //   <div>
+  //     <button onClick={() => {reviewSeqDispatch({ type: "namePageReview/pageDetailSeq", seq: 2})}}>ReviewSeqDispatch</button>
+  //   </div>
+  // )
+}
+
+export default ReviewDetails;

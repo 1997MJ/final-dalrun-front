@@ -1,21 +1,57 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 // import { useLocation } from "react-router-dom";
 
 function StoreCartList(props) {
+  const [checkbox_DisplayMode, setCheckbox_DisplayMode] = useState(true);  // TEST MODE
+  const navigate = useNavigate();
+
+  let storage_memId = "x";
+  let storage_memName = "x";
+  let storage_memEmail = "x";
+  let storage_memPhone = "x";
+  let storage_memGrade = "x";
+  let storage_memPoint = "x";
+  let json_login = localStorage.getItem("login");
+  if (json_login === null) {
+      storage_memId = "user01test";
+      storage_memName = "김멀티";
+      storage_memEmail = "user@email.com";
+      storage_memPhone = "010-0000-0000";
+      storage_memGrade = "러너";
+      storage_memPoint = "99999";
+  }
+  else {
+      storage_memId = JSON.parse(json_login).memId;
+      storage_memName = JSON.parse(json_login).memberName;
+      storage_memEmail = JSON.parse(json_login).email;
+      storage_memPhone = JSON.parse(json_login).phone;
+      storage_memGrade = JSON.parse(json_login).grade;
+      storage_memPoint = JSON.parse(json_login).point;
+  }
+
   // const location = useLocation();
-  const [userId, setUserId] = useState("user01test");
+  const [userId, setUserId] = useState(storage_memId);
   const [cartList, setCartList] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [itemQuantity, setItemQuantiry] = useState();
 
   const [totalPaymentAmount, setTotalPaymentAmount] = useState(0);
+  const [totalDiscountedAmount, setTotalDiscountedAmount] = useState(0);
+  const [fullFullPaymentAmount, setFullFullPaymentAount] = useState(0)
+  const [memPoint, setMemPoint] = useState(0);
 
   const [data, setData] = useState([]);  // 삭제 예정.
   const [sum, setSum] = useState(0);  // 삭제 예정.
+
+  // --------주문상세 데이터를 담기위한 state----------
+  const [orderNumber, setOrderNumber] = useState();
+  const [orderItems, setOrderItems] = useState([]);
+  // ------------------------------------------------
 
   // Component to Component
   const [myData, setMyData] = React.useState("<blank>");
@@ -110,6 +146,21 @@ function StoreCartList(props) {
     
   }, [data])
 
+  
+  useEffect (() => {
+    // alert(orderNumber)
+    if (orderNumber === undefined) return;
+    navigate(`/store-payment-confirm/${orderNumber}`);
+  }, [orderNumber])
+
+  useMemo (() => {
+    if (storage_memGrade === "걸음마") setTotalDiscountedAmount(totalPaymentAmount * 0.97 + 3000)
+    else if (storage_memGrade === "런니니") setTotalDiscountedAmount(totalPaymentAmount * 0.95 + 3000)
+    else if (storage_memGrade === "러너") setTotalDiscountedAmount(totalPaymentAmount * 0.92 + 3000)
+    else if (storage_memGrade === "마라토너") setTotalDiscountedAmount(totalPaymentAmount * 0.85)
+  }, [totalPaymentAmount, storage_memGrade])
+
+
   if(loading === false){
     return <div>Loading...</div>
   }
@@ -120,7 +171,7 @@ function StoreCartList(props) {
 
 
   const onClickPayment = () => {
-    console.log("  const onClickPayment = () => {", totalPaymentAmount)
+    console.log("  const onClickPayment = () => {", totalDiscountedAmount)
     console.log("  const onClickPayment = () => {", pulledOrderName)
     console.log("  const onClickPayment = () => {", pulledOrderPhone)
     console.log("  const onClickPayment = () => {", pulledOrderAddress)
@@ -132,7 +183,7 @@ function StoreCartList(props) {
       pay_method: 'card', // 결제수단 (필수항목)
       merchant_uid: `mid_${new Date().getTime()}`, // merchant_uid (필수항목)
       name: '결제 테스트', // 주문명 (필수항목)
-      amount: `${totalPaymentAmount}`, // 금액 (필수항목)
+      amount: `${totalDiscountedAmount}`, // 금액 (필수항목)
       custom_data: { name: '부가정보', desc: '세부 부가정보' },
       buyer_name: `${pulledOrderName}`, // 구매자 이름
       buyer_tel: `${pulledOrderPhone}`, // 구매자 전화번호 (필수항목)
@@ -145,17 +196,33 @@ function StoreCartList(props) {
   
   const callback = (response) => {
     const {success, error_msg, imp_uid, merchant_uid, pay_method, paid_amount, status} = response;
-    if (success) {
-      alert('결제 성공');
-      console.log(response);
-      console.log("imp_uid: ", imp_uid);
-      console.log("merchant_uid: ", merchant_uid);
-      console.log("pay_method: ", pay_method);
-      console.log("paid_amount: ", paid_amount);
-      console.log("status: ", status);
-    } else {
-      alert(`결제 실패 : ${error_msg}`);
-    }
+
+    axios.get(`http://localhost:3000/verifyIamport/${imp_uid}`, {})
+    .then (function (resp) {
+      console.log(" @ verifyIamport resp: ", resp.data);
+      console.log(" @ verifyIamport resp: ", resp.data.response.amount);
+      if (resp.data.response.amount === totalDiscountedAmount) {
+        alert("결제 되었습니다.")
+      }
+    })
+    .then (function () {
+      writeOrderData();
+    })
+    .catch (function (err) {
+      alert(err);
+    })
+
+    // if (success) {
+    //   alert('결제 성공');
+    //   console.log(response);
+    //   console.log("imp_uid: ", imp_uid);
+    //   console.log("merchant_uid: ", merchant_uid);
+    //   console.log("pay_method: ", pay_method);
+    //   console.log("paid_amount: ", paid_amount);
+    //   console.log("status: ", status);
+    // } else {
+    //   alert(`결제 실패 : ${error_msg}`);
+    // }
   }
 
 
@@ -177,8 +244,6 @@ function StoreCartList(props) {
     window.location.reload();
   }
 
-
-
   const writeOrderData = async () => {
     const resp = await axios.post(
       "http://localhost:3000/writeOrderData",
@@ -195,9 +260,37 @@ function StoreCartList(props) {
         },
       }
     );
-    console.log("  sendOrderData: ", resp.data);
+    console.log("  sendOrderData: ", resp.data.result);
+    setOrderNumber(resp.data.orderNumber);
 
+    // 주문 성공시, 주문상세 데이터 넣기
+    const newOrderItems = cartList.productIdList.map((list) => ({
+      "orderNumber": resp.data.orderNumber,
+      "productId": list.productId,
+      "productName": list.cartProdName,
+      "productPrice": list.cartProdPrice,
+      "productQuantity": list.cartProdQuantity
+    }));
+    
+    if(newOrderItems.length > 0) {
+      console.log(newOrderItems);
+      setOrderItems((prev) => [...prev, ...newOrderItems]);
+      
+      console.log(orderItems);
+  
+      axios.post("http://localhost:3000/writeOrderDetail", newOrderItems)
+        .then((resp) => {
+          console.log(resp.data);
+          setOrderItems([]);
+        })
+        .catch((err) => console.log(err));
+    }
+
+    // 카트 비우기
+    const empty_resp = await axios.post("http://localhost:3000/emptyCart", null, { params: {"memId": userId}});
+    console.log(" console.log(empty_resp.data) ", empty_resp.data)
   }
+
 
 
 
@@ -213,7 +306,7 @@ function StoreCartList(props) {
           setTotalPaymentAmount(tempSum)
           return (
             <div key={prodInfo.productId}>
-              <div className="item">
+              <div className="store_payment_item_container">
 
                 {/*                 
                 <div className="buttons">
@@ -225,57 +318,31 @@ function StoreCartList(props) {
                 </div> 
                 */}
 
-                <div className="image" style={{ width: 160 }}>
+                <div className="store_payment_item_description_image" style={{ width: 260 }}>
                   <img
                     src={`http://localhost:3000/dalrun-hc/store/products/${prodInfo.productCode}/${prodInfo.productCode}-01.png`}
                     alt=""
                   />
                 </div>
 
-                <div className="description">
-                  <span>{prodInfo.productId}</span>
-                  <span>{prodInfo.productName}</span>
-                  <span>{prodInfo.productSize}</span>
-                  <span>{prodInfo.productColor}</span>
+                <div className="store_payment_item_description">
+                  {/* <span>{prodInfo.productId}</span> */}
+                  <p className="store_payment_item_description_title">{prodInfo.productName}</p>
+                  <span className="store_payment_item_description_sizecolor">size: {prodInfo.productSize}</span>
+                  <span className="store_payment_item_description_sizecolor">color: {prodInfo.productColor}</span>
                 </div>
 
-                <div className="quantity">
-
-                  {/*                   
-                  <button className="plus-btn" type="button" name="button">
-                    <img
-                      src="assets/img/dalrun-hc/store/storecart/plus.svg"
-                      alt=""
-                    />
-                  </button> 
-                  */}
-
-                  <input
-                    type="text"
-                    name="name"
-                    defaultValue={matchedProduct.cartProdQuantity}
-                  />
-
-                  {/* 
-                  <button className="minus-btn" type="button" name="button">
-                    <img
-                      src="assets/img/dalrun-hc/store/storecart/minus.svg"
-                      alt=""
-                    />
-                  </button>
-                  */}
-
-                </div>
-                
-                {/*                 
                 <div>
-                  <button value={prodInfo.productId} onClick={deleteItem}>
-                    삭제: {prodInfo.productId}
-                  </button>
-                </div> 
-                */}
-
-                <div className="total-price">₩ {prodInfo.productPrice * matchedProduct.cartProdQuantity}</div>
+                  <div className="store_payment_item_quantity">
+                    <p className="store_payment_item_quantity_text">
+                      Qty: {matchedProduct.cartProdQuantity}
+                    </p>
+                  </div>
+                  
+                  <div className="store_payment_item_price">
+                    <p>₩ {prodInfo.productPrice * matchedProduct.cartProdQuantity}</p>
+                  </div>
+                </div>
               </div>
 
               {/* 
@@ -297,205 +364,306 @@ function StoreCartList(props) {
 
 
 
-  return (
-    <div>
-      <button onClick={onClickPayment}>결제하기test</button>
-      {/* // Component to Component */}
-      <span>{myData}</span>
-      <p>{pulledOrderName}</p>
-      <p>{pulledOrderAddress}</p>
-      <p>{pulledOrderPhone}</p>
-      <p>{pulledOrderRequirment}</p>
-      <section>
-        <h1>ORDER SUMMARY</h1>
-        <h3>{totalPaymentAmount}</h3>
-        {/* <div className="shopping-cart"> */}
-        <div>
-          {/* <!-- Title --> */}
-          <div className="title">Shopping Bag</div>
 
-          <PaymentDataDisplay2 productIdList={cartList.productIdList} productInfoList={cartList.productInfoList} />
 
-          {/* <!-- Product #1 --> */}
-          <div className="item">
-            <div className="buttons">
-              <span className="delete-btn"></span>
-              <span
-                className={likeBtn ? "like-btn is-active" : "like-btn"}
-                onClick={likeBtnClick}
-              ></span>
-            </div>
+  // 주문번호 작성 후 페이지 이동.
+  const testSuccessPayment = () => {
+    axios.get(`http://localhost:3000/korean`, {})
+    .then (function () {
+      writeOrderData();
+    })
+    .catch (function (err) {
+      alert(err);
+    })
+  }
 
-            <div className="image">
-              <img
-                src="assets/img/dalrun-hc/store/storecart/item-1.png"
-                alt=""
-              />
-            </div>
 
-            <div className="description">
-              <span>Common Projects</span>
-              <span>Bball High</span>
-              <span>White</span>
-            </div>
+    return checkbox_DisplayMode 
+    // USER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ USER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ USER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ USER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ 
+    ? (
+      <>    
+      {/* <input type='checkbox' onClick={() =>(setCheckbox_DisplayMode(!checkbox_DisplayMode))}/>USER_MODE */}
+      <div className="store_payment_list_container">
+      <div className="ptf-spacer" style={{ "--ptf-xxl": "0.45rem" }}></div>
+        <section>
+          <h5>결제 상품 리스트</h5>
 
-            <div className="quantity">
-              <button className="plus-btn" type="button" name="button">
-                <img
-                  src="assets/img/dalrun-hc/store/storecart/plus.svg"
-                  alt=""
-                />
-              </button>
-              <input type="text" name="name" defaultValue="1" />
-              <button className="minus-btn" type="button" name="button">
-                <img
-                  src="assets/img/dalrun-hc/store/storecart/minus.svg"
-                  alt=""
-                />
-              </button>
-            </div>
+          {/* <div className="shopping-cart"> */}
+          <div>
 
-            <div className="total-price">$549</div>
+            <PaymentDataDisplay2 productIdList={cartList.productIdList} productInfoList={cartList.productInfoList} />
+
+            {/* <!-- DB 데이터 --> */}
+          {/* 
+            {cartList.map((item, index) => (
+              <div className="item" key={index}>
+                <div className="image" style={{ width: 160 }}>
+                  <img
+                    src={`http://localhost:3000/dalrun-hc/store/products/${item.productCode}/${item.productCode}-01.png`}
+                    alt=""
+                  />
+                </div>
+
+                <div className="description">
+                  <span>{item.productName}</span>
+                  <span>{item.productSize}</span>
+                  <span>{item.productColor}</span>
+                </div>
+
+                <div className="total-price">₩ {item.productPrice}</div>
+              </div>
+            ))}
+          */}
           </div>
+        </section>
 
-          {/* <!-- Product #2 --> */}
-          <div className="item">
-            <div className="buttons">
-              <span className="delete-btn"></span>
-              <span
-                className={likeBtn ? "like-btn is-active" : "like-btn"}
-                onClick={likeBtnClick}
-              ></span>
+        <section>
+          <div className="payment_progress_container">
+            <div className="payment_progress_container2">
+                  <p className="payment_amount_info">총 상품 가격&emsp;&emsp; ₩ {totalPaymentAmount}</p>
+                  <p className="payment_amount_info">택배비&emsp;&emsp; ₩ 3000</p>
+
+
+                  <h5 className="store_payment_total_title">총 결제 금액</h5>
+                  {/* <button onClick={calcTotalPaymentAmount}>
+                    {totalPaymentAmount}결제금액확인test
+                  </button> */}
+                  {/* <Link to="/store-payment">
+                    <button onClick={writeOrderData}>
+                      {totalPaymentAmount}결제 실행 (주문 데이터)
+                    </button>
+                  </Link> */}
+                  
+                  {/* <Link to={`/store-payment-confirm/${orderNumber}`} >
+                    <button>{totalPaymentAmount}결제 실행 (링크)</button>
+                  </Link> */}
+
+                  {storage_memGrade === "마라토너" 
+                    ? <div>
+                        <h3 className="store_payment_total_amount_linethrough" >₩ {totalPaymentAmount + 3000}</h3>
+                        <h3 className="store_payment_total_amount" >₩ {totalDiscountedAmount}</h3>
+                          <p className="store_payment_total_free">"마라토너 등급 무료배송"</p>
+                      </div>
+                    : <div>
+                        <h3 className="store_payment_total_amount_linethrough" >₩ {totalPaymentAmount + 3000}</h3>
+                        <h3 className="store_payment_total_amount" >₩ {totalDiscountedAmount}</h3>
+                      </div>
+                  }
+                  
+                  {/* <button onClick={testSuccessPayment}>testSuccessPayment</button> */}
+                  <button className="store_payment_button" onClick={onClickPayment}>결제</button>
+
+
             </div>
-
-            <div className="image">
-              <img
-                src="assets/img/dalrun-hc/store/storecart/item-2.png"
-                alt=""
-              />
-            </div>
-
-            <div className="description">
-              <span>Maison Margiela</span>
-              <span>Future Sneakers</span>
-              <span>White</span>
-            </div>
-
-            <div className="quantity">
-              <button className="plus-btn" type="button" name="button">
-                <img
-                  src="assets/img/dalrun-hc/store/storecart/plus.svg"
-                  alt=""
-                />
-              </button>
-              <input type="text" name="name" defaultValue="1" />
-              <button className="minus-btn" type="button" name="button">
-                <img
-                  src="assets/img/dalrun-hc/store/storecart/minus.svg"
-                  alt=""
-                />
-              </button>
-            </div>
-
-            <div className="total-price">$870</div>
           </div>
+        </section>
+      </div>
+    </>
+    )
 
-          {/* <!-- Product #3 --> */}
-          <div className="item">
-            <div className="buttons">
-              <span className="delete-btn"></span>
-              <span
-                className={likeBtn ? "like-btn is-active" : "like-btn"}
-                onClick={likeBtnClick}
-              ></span>
-            </div>
 
-            <div className="image">
-              <img
-                src="assets/img/dalrun-hc/store/storecart/item-3.png"
-                alt=""
-              />
-            </div>
+    // DEVELOPER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ DEVELOPER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ DEVELOPER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ DEVELOPER_MODE @@@@@ @@@@@ @@@@@ @@@@@ @@@@@ 
+    : (
+      <>    <input type='checkbox' onClick={() => (setCheckbox_DisplayMode(!checkbox_DisplayMode))}/>DEVELOPER_MODE
+      <div>
+        <button onClick={onClickPayment}>결제하기test</button>
+        {/* // Component to Component */}
+        <span>{myData}</span>
+        <p>{pulledOrderName}</p>
+        <p>{pulledOrderAddress}</p>
+        <p>{pulledOrderPhone}</p>
+        <p>{pulledOrderRequirment}</p>
+        <section>
+          <h1>ORDER SUMMARY</h1>
+          <h3>{totalPaymentAmount}</h3>
+          {/* <div className="shopping-cart"> */}
+          <div>
+            {/* <!-- Title --> */}
+            <div className="title">Shopping Bag</div>
 
-            <div className="description">
-              <span>Our Legacy</span>
-              <span>Brushed Scarf</span>
-              <span>Brown</span>
-            </div>
+            <PaymentDataDisplay2 productIdList={cartList.productIdList} productInfoList={cartList.productInfoList} />
 
-            <div className="quantity">
-              <button className="plus-btn" type="button" name="button">
+            {/* <!-- Product #1 --> */}
+            <div className="item">
+              <div className="buttons">
+                <span className="delete-btn"></span>
+                <span
+                  className={likeBtn ? "like-btn is-active" : "like-btn"}
+                  onClick={likeBtnClick}
+                ></span>
+              </div>
+
+              <div className="image">
                 <img
-                  src="assets/img/dalrun-hc/store/storecart/plus.svg"
-                  alt=""
-                />
-              </button>
-              <input type="text" name="name" defaultValue="1" />
-              <button className="minus-btn" type="button" name="button">
-                <img
-                  src="assets/img/dalrun-hc/store/storecart/minus.svg"
-                  alt=""
-                />
-              </button>
-            </div>
-
-            <div className="total-price">$349</div>
-          </div>
-
-          {/* <!-- DB 데이터 --> */}
-        {/* 
-          {cartList.map((item, index) => (
-            <div className="item" key={index}>
-              <div className="image" style={{ width: 160 }}>
-                <img
-                  src={`http://localhost:3000/dalrun-hc/store/products/${item.productCode}/${item.productCode}-01.png`}
+                  src="assets/img/dalrun-hc/store/storecart/item-1.png"
                   alt=""
                 />
               </div>
 
               <div className="description">
-                <span>{item.productName}</span>
-                <span>{item.productSize}</span>
-                <span>{item.productColor}</span>
+                <span>Common Projects</span>
+                <span>Bball High</span>
+                <span>White</span>
               </div>
 
-              <div className="total-price">₩ {item.productPrice}</div>
-            </div>
-          ))}
-        */}
-        </div>
-      </section>
-
-      <section>
-        <div className="ptf-single-post__wrapper">
-          <div className="container-xxl">
-            <div className="row">
-              <div className="col-xl-8">
-                <h3>TOTAL PAYMENT AMOUNT</h3>
-                <button onClick={calcTotalPaymentAmount}>
-                  {totalPaymentAmount}결제금액확인test
+              <div className="quantity">
+                <button className="plus-btn" type="button" name="button">
+                  <img
+                    src="assets/img/dalrun-hc/store/storecart/plus.svg"
+                    alt=""
+                  />
                 </button>
-                <Link to="/store-payment">
-                  <button onClick={writeOrderData}>
-                    {totalPaymentAmount}결제 실행 (주문 데이터)
-                  </button>
-                </Link>
-                <button onClick={onClickPayment}>{totalPaymentAmount}결제 실행 (프론트)</button>
-                <Link to="/store-payment">
-                  <button>{totalPaymentAmount}결제 실행 (링크)</button>
-                </Link>
-                <h6 defaultValue={totalPaymentAmount}>{totalPaymentAmount}</h6>
-                <input
-                  defaultValue={totalPaymentAmount}
-                  onChange={(e) => e.target.value}
+                <input type="text" name="name" defaultValue="1" />
+                <button className="minus-btn" type="button" name="button">
+                  <img
+                    src="assets/img/dalrun-hc/store/storecart/minus.svg"
+                    alt=""
+                  />
+                </button>
+              </div>
+
+              <div className="total-price">$549</div>
+            </div>
+
+            {/* <!-- Product #2 --> */}
+            <div className="item">
+              <div className="buttons">
+                <span className="delete-btn"></span>
+                <span
+                  className={likeBtn ? "like-btn is-active" : "like-btn"}
+                  onClick={likeBtnClick}
+                ></span>
+              </div>
+
+              <div className="image">
+                <img
+                  src="assets/img/dalrun-hc/store/storecart/item-2.png"
+                  alt=""
                 />
+              </div>
+
+              <div className="description">
+                <span>Maison Margiela</span>
+                <span>Future Sneakers</span>
+                <span>White</span>
+              </div>
+
+              <div className="quantity">
+                <button className="plus-btn" type="button" name="button">
+                  <img
+                    src="assets/img/dalrun-hc/store/storecart/plus.svg"
+                    alt=""
+                  />
+                </button>
+                <input type="text" name="name" defaultValue="1" />
+                <button className="minus-btn" type="button" name="button">
+                  <img
+                    src="assets/img/dalrun-hc/store/storecart/minus.svg"
+                    alt=""
+                  />
+                </button>
+              </div>
+
+              <div className="total-price">$870</div>
+            </div>
+
+            {/* <!-- Product #3 --> */}
+            <div className="item">
+              <div className="buttons">
+                <span className="delete-btn"></span>
+                <span
+                  className={likeBtn ? "like-btn is-active" : "like-btn"}
+                  onClick={likeBtnClick}
+                ></span>
+              </div>
+
+              <div className="image">
+                <img
+                  src="assets/img/dalrun-hc/store/storecart/item-3.png"
+                  alt=""
+                />
+              </div>
+
+              <div className="description">
+                <span>Our Legacy</span>
+                <span>Brushed Scarf</span>
+                <span>Brown</span>
+              </div>
+
+              <div className="quantity">
+                <button className="plus-btn" type="button" name="button">
+                  <img
+                    src="assets/img/dalrun-hc/store/storecart/plus.svg"
+                    alt=""
+                  />
+                </button>
+                <input type="text" name="name" defaultValue="1" />
+                <button className="minus-btn" type="button" name="button">
+                  <img
+                    src="assets/img/dalrun-hc/store/storecart/minus.svg"
+                    alt=""
+                  />
+                </button>
+              </div>
+
+              <div className="total-price">$349</div>
+            </div>
+
+            {/* <!-- DB 데이터 --> */}
+          {/* 
+            {cartList.map((item, index) => (
+              <div className="item" key={index}>
+                <div className="image" style={{ width: 160 }}>
+                  <img
+                    src={`http://localhost:3000/dalrun-hc/store/products/${item.productCode}/${item.productCode}-01.png`}
+                    alt=""
+                  />
+                </div>
+
+                <div className="description">
+                  <span>{item.productName}</span>
+                  <span>{item.productSize}</span>
+                  <span>{item.productColor}</span>
+                </div>
+
+                <div className="total-price">₩ {item.productPrice}</div>
+              </div>
+            ))}
+          */}
+          </div>
+        </section>
+
+        <section>
+          <div className="ptf-single-post__wrapper">
+            <div className="container-xxl">
+              <div className="row">
+                <div className="col-xl-8">
+                  <h3>TOTAL PAYMENT AMOUNT</h3>
+                  <button onClick={calcTotalPaymentAmount}>
+                    {totalPaymentAmount}결제금액확인test
+                  </button>
+                  <Link to="/store-payment">
+                    <button onClick={writeOrderData}>
+                      {totalPaymentAmount}결제 실행 (주문 데이터)
+                    </button>
+                  </Link>
+                  <button onClick={onClickPayment}>{totalPaymentAmount}결제 실행 (프론트)</button>
+                  <Link to="/store-payment-confirm">
+                    <button>{totalPaymentAmount}결제 실행 (링크)</button>
+                  </Link>
+                  <h6 defaultValue={totalPaymentAmount}>{totalPaymentAmount}</h6>
+                  <input
+                    defaultValue={totalPaymentAmount}
+                    onChange={(e) => e.target.value}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-    </div>
-  );
+        </section>
+      </div>
+      </>
+    )
 }
 
 

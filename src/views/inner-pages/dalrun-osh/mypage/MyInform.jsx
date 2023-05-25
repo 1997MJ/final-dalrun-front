@@ -1,94 +1,182 @@
-import React, { Component, useState  } from "react";
-import PassChange from "./passchange/PassChange";
-import ModalBtn from "../../../../components/dalrun-sh/ModalBtn";
+import React, { useRef, useEffect, useState  } from "react";
+import axios from 'axios';
 import "../../../../assets/dalrun-sh/scss/inform.scss"
+import { useNavigate } from "react-router-dom";
+import useCheckControl from "../../../../components/dalrun-sh/useCheckControl";
+import Passmodal from "../../../../components/dalrun-sh/Passmodal";
 
 function Inform() {
+  const [dataList, setDataList] = useState([]);
+  const { handleAllCheck, handleSingleCheck, checkedList } = useCheckControl({dataList});  
+  const history = useNavigate();
+  const loginData = JSON.parse(localStorage.getItem("login"));
+  let profileImg = null;
+  let isLogin = false;
 
-  const passCg = [
-    {cate:"update", name:"비밀번호 변경", selected:<PassChange />} 
-  ];
-  const category = [
-    {cate:"save", name:"저장", selected:"저장하시겠습니까?"},     
-    {cate:"delete", name:"회원탈퇴", selected:"정말 탈퇴하시겠습니까?"}
-  ];
-  const [userInfo, setUserInfo] = useState({
-    id: 'mul_cam',
-    email: 'dalrun@naver.com',
-    phoneNumber: '01023139112',
-    nickname: '런니니',
-    password: '비밀',
-  });
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setUserInfo((prevUserInfo) => ({
-      ...prevUserInfo,
-      [name]: value,
-    }));
-  };
+  if(loginData){
+    profileImg = loginData.profile;
+    isLogin = true;
+  }
+
+  const [id, setId] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [birth, setBirth] = useState("");
+  const [profile, setprofile] = useState("");
+  const [footSize, setFootSize] = useState("");
+  const [imgFile, setImgFile] = useState(`http://localhost:3000/dalrun-yr/profiles/${profileImg}`)
+  const imgRef = useRef(null); // 파일 선택 창에서 선택된 파일을 가리키는 역할
+
+  useEffect(()=>{
+    const str = localStorage.getItem('login')
+    if(str !== null){
+        const login = JSON.parse(str);
+        setId(login.memId);
+        setPwd(login.password);
+        setName(login.memberName);
+        setEmail(login.email);
+        setPhone(login.phone);
+        setBirth(login.birth);
+        setBirth(login.profile);
+        setFootSize(login.foot);
+    }else {
+        alert('login을 해주세요.');
+        history('/login');
+    }
+}, [history, setId]);
+
+const onSubmit = (e) => {
+  e.preventDefault();
+
+  let formData = new FormData();
+  formData.append("memId", id);
+  formData.append("password", pwd);
+  formData.append("memberName", name);
+  formData.append("email", email);
+  formData.append("phone", phone);
+  formData.append("birth", birth);
+  formData.append("profile", profile);
+  formData.append("foot", footSize);
+
+    // 이미지 파일이 선택되었을 경우에만 업데이트
+    if (imgRef.current.files.length > 0) {
+        const file = imgRef.current.files[0];
+
+        // FormData에 이미지 파일 추가
+        formData.append("profileImage", file);
+        }  
+
+  axios.post('http://localhost:3000/my_updatemember', formData)
+      .then((resp) => {
+          console.log(resp.data);
+          if(resp.data === "YES") {
+               alert("수정완료");
+              // onHide();
+              // setSearchParam(searchParam.set('target',''));
+              // localStorage.removeItem('login');
+              // alert("다시 로그인해주세요..");      
+              
+          } else {
+              alert("수정실패");
+          }
+      })
+      .catch((err) => {
+          console.log(err);
+      });
+}
+
+    // 이미지 파일 선택 함수
+    const handlePhotoChange = (event) => {
+        const file = event.target.files[0];
+
+        if (file) {
+          const reader = new FileReader();
+      
+          reader.onload = () => {
+            setImgFile(reader.result);
+          };
+      
+
+          reader.readAsDataURL(file);
+        }
+
+    };
 
   return(
-    <div className="myinform">
-      <div className="my-page">
-        <h4>회원정보</h4>
+    
+    <div className="members container">
+        <br /><br /><br /><br />
+        <h4 className="title">회원정보</h4>
         <br />
         <div className="inform outline" />
-        <br />        
-        <div ></div>
-        <label>
-          <span>아  이  디</span>
-          <input type="text" name="id" value={userInfo.id} onChange={handleInputChange} />
-        </label>
-        <label>
-          <span>이  메  일</span>
-          <input type="email" name="email" value={userInfo.email} disabled/>
-        </label>
-        <label>
-          <span>전화번호</span>
-          <input type="text" name="phoneNumber" value={userInfo.phoneNumber} onChange={handleInputChange} />
-        </label>
-        <label>
-          <span>닉  네  임</span>
-          <input type="text" name="nickname" value={userInfo.nickname} onChange={handleInputChange} />
-        </label>
-        <label>
-         <span>비밀번호</span>  <ModalBtn {...passCg} />
-        </label>
-        <div>
-          <ModalBtn {...category} />
-        </div>
+        <br />  
+
+        <div className="admin_update_container">
+            <div className="admin_update"></div>
+        <form name="frm" onSubmit={onSubmit} encType="multipart/form">
+
+            <div className="profile_img">
+                <label htmlFor="profileImg">
+                프로필 이미지
+                </label>
+
+                {/* 업로드 된 이미지 미리보기 */}
+                <img
+                src={imgFile ? imgFile : `http://localhost:3000/dalrun-yr/profiles/${profileImg}`}
+                // src={imgFile ? `http://localhost:3000/dalrun-yr/profiles/${profileImg}` : `http://localhost:3000/dalrun-yr/profiles/${profileImg}`}
+                alt="프로필 이미지"
+                style={{ width: "50%" }}
+                />
+                <br /><br />
+                <input
+                ref={imgRef} // imgRef를 input 요소에 연결
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange} // onChange 이벤트 핸들러 수정
+                />
+            </div>
+
+          <div>
+              <label htmlFor="id">아이디</label>
+              <input type="text" value={id || ""} readOnly={true} />
+          </div>
+          <div>
+              <label htmlFor="pwd">비밀번호</label>            
+              <Passmodal />
+          </div>
+          <div>
+              <label htmlFor="name">이름</label>
+              <input type="text" value={name || ""} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+              <label htmlFor="email">이메일</label>
+              <input type="email" value={email || ""} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div>
+              <label htmlFor="phone">연락처</label>
+              <input type="tel" value={phone || ""} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div>
+              <label htmlFor="birthdate">생년월일</label>
+              <input type="date" value={birth || ""} onChange={(e) => setBirth(e.target.value)} />
+          </div>
+          <div>
+              <label htmlFor="foot-size">발볼 넓이:</label>
+              <select id="foot-size" value={footSize} onChange={(e) => setFootSize(e.target.value)}>
+                  <option value="">선택하세요</option>
+                  <option value="narrow">발볼이 좁은편</option>
+                  <option value="normal">보통</option>
+                  <option value="wide">넓은편</option>
+                  <option value="extra-wide">아주 넓은편</option>
+              </select>
+          </div>  
+
+          <input type="submit" value="수정" />                  
+        </form>
       </div>
     </div>
-    // <div className="container">
-    //   <h4 >회원정보</h4>
-
-    //   <br />
-    //   <div />
-    //   <br />
-    //   <div>
-    //     <div style={{flex : 1}}>
-    //       <p>아이디</p> <input type="text" value=" id " />
-    //     </div>
-    //     <div>
-    //       <p>이메일</p> <input type="text" value=" mulcam@naver.com " />
-    //     </div>
-    //     <div>
-    //       <p>전화번호</p> <input type="text" value=" 01023139112 " />
-    //     </div>
-    //     <div>
-    //      <p>닉네임</p> <input type="text" value=" 화이팅 " />
-    //     </div> 
-        // <div>
-        //  <p>비밀번호</p>  <ModalBtn {...passCg} />
-        // </div>
-
-        // <div>
-        //   <ModalBtn {...category} />
-        // </div>
-    //   </div>
-
-    // </div>
-
     );
 }
 

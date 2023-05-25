@@ -1,23 +1,28 @@
 import React from 'react';
 import { Helmet } from "react-helmet";
-import { Link } from 'react-router-dom';
-import Header from '../../../../components/dalrun-pyr/Header';
-import BlogThree from '../../../../components/blog/BlogThree';
-import CopyRight from '../../../../components/footer/copyright/CopyRight';
-import Footer from '../../../../components/footer/Footer';
-import SearchBlog from '../../../../components/form/SearchBlog';
-import NewsletterTwo from '../../../../components/newsletter/NewsletterTwo';
+import { useNavigate } from 'react-router-dom';
+import HeadermainPage from "../../../../components/dalrun-jy/HeadermainPage";
+
+import CrewBlogThree from '../../../../components/dalrun-pyr/crewBbs/CrewBlogThree';
+import CopyRight from '../../../../components/dalrun-jy/footer/CopyRight';
+
 import CrewBbsGridContent from '../../../../components/dalrun-pyr/crewBbs/CrewBbsGridSLider';
 
+import '../css/CrewBbsMain.css';
+
 const CrewBbsMain = () => {
+  const history = useNavigate();
+  const gotoWrite = () => {
+    history("/crewBbsWrite");
+  }
   return (
     <div className="ptf-site-wrapper animsition ptf-is--blog-grid">
       <Helmet>
-        <title>달런달런 - 크루 모집 페이지</title>
+        <title>달런달런 - 크루 페이지</title>
       </Helmet>
       {/* End Page SEO Content */}
       <div className="ptf-site-wrapper__inner">
-        <Header />
+        <HeadermainPage />
         {/* End  Header */}
 
         <div className="main">
@@ -38,30 +43,25 @@ const CrewBbsMain = () => {
                       data-aos="fade"
                       data-aos-delay="0"
                     >
-                      <h1 className="large-heading">달런달런</h1>
+                      <h1 className="large-heading">🏃‍♀️Crew🏃</h1>
                     </div>
                   </div>
                   {/* End .col */}
                   <div className="col-xl-3 offset-xl-1 col-lg-4">
                     {/* <!--Animated Block--> */}
-                    <div
-                      className="ptf-animated-block"
-                      data-aos="fade"
-                      data-aos-delay="100"
-                    >
-                      <div className="ptf-widget ptf-widget-search">
-                        <SearchBlog />
-                      </div>
-                      <br></br>
-                      <Link to="/crewBbsWrite">크루모집 글쓰기</Link>
-                    </div>
+                   
+                    <div id="holder" onClick={gotoWrite}>
+                        <div className="button_write">
+                            <p className="btnText">크루 생성</p>
+                            <div className="btnTwo">
+                              <p className="btnText2">GO!</p>
+                            </div>
+                        </div>
+                        </div>
                   </div>
                 </div>
                 {/* <!--Spacer--> */}
-                <div
-                  className="ptf-spacer"
-                  style={{ "--ptf-xxl": "4.375rem" }}
-                ></div>
+                
               </div>
               {/* End .container-xxl */}
             </section>
@@ -139,7 +139,9 @@ const CrewBbsMain = () => {
                       "--bs-gutter-y": "3rem",
                     }}
                   >
-                    <BlogThree />
+                    {/* 게시글 list */}
+                    <CrewBlogThree />
+                    {/* <CrewBbsList/> */}
                   </div>
                 </div>
                 {/* End .ptf-animated-block */}
@@ -152,7 +154,7 @@ const CrewBbsMain = () => {
 
                 <div className="text-center">
                   {/* <!--Animated Block--> */}
-                  <div
+                  {/* <div
                     className="ptf-animated-block"
                     data-aos="fade"
                     data-aos-delay="0"
@@ -160,7 +162,7 @@ const CrewBbsMain = () => {
                     <a className="ptf-load-more" href="#">
                       More
                     </a>
-                  </div>
+                  </div> */}
                 </div>
                 {/* End More Blog btn */}
 
@@ -205,13 +207,13 @@ const CrewBbsMain = () => {
                       data-aos="fade"
                       data-aos-delay="0"
                     >
-                      <h1 className="large-heading">Newsletter</h1>
+                      {/* <h1 className="large-heading">Newsletter</h1> */}
                       {/* <!--Spacer--> */}
-                      <div
+                      {/* <div
                         className="ptf-spacer"
                         style={{ "--ptf-xxl": "1.25rem" }}
-                      ></div>
-                      <p>Get the latest news & insight.</p>
+                      ></div> */}
+                      {/* <p>Get the latest news & insight.</p> */}
                     </div>
                     {/* <!--Spacer--> */}
                     <div
@@ -227,7 +229,7 @@ const CrewBbsMain = () => {
                       data-aos-delay="100"
                     >
                       {/* <!--Spacer--> */}
-                      <NewsletterTwo />
+                      {/* <NewsletterTwo /> */}
                     </div>
                   </div>
                 </div>
@@ -247,9 +249,7 @@ const CrewBbsMain = () => {
       {/* <!--Footer--> */}
       <footer className="ptf-footer ptf-footer--style-1">
         <div className="container-xxl">
-          <div className="ptf-footer__top">
-            <Footer />
-          </div>
+         
           <div className="ptf-footer__bottom">
             <CopyRight />
           </div>

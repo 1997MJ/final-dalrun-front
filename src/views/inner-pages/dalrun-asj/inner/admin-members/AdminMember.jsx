@@ -28,7 +28,7 @@ function AdminMember() {
   return (
     <div className="member">
       <div className="member-content">
-        <div className="search outline">
+        <div className="search">
           <div>
             <div className="search-content">
               <span className="search-title">회원 등급</span>
@@ -60,7 +60,7 @@ function AdminMember() {
         <div className="info">
           <ModalBtn {...category} />
           <div className="info_con">
-            <Table striped bordered hover>
+            <Table responsive hover>
               <thead>
                 <tr>
                   <th>
@@ -107,7 +107,7 @@ function AdminMember() {
                       <td>{mem.grade}</td>
                       <td>{mem.foot}</td>
                       <td>{mem.regdate.split('T')[0]}</td>
-                      <td>{mem.memberupdate.split('T')[0]}</td>
+                      <td>{mem.memberupdate !== null ? mem.memberupdate.split('T')[0] : mem.memberupdate}</td>
                       <td>{mem.del === 1 ? "탈퇴":""}</td>
                     </tr>
                     );

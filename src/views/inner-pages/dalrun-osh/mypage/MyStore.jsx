@@ -1,48 +1,140 @@
 import React, { useState, useEffect } from 'react';
-import shoes from "../shoes.png";
-import cloth from "../cloth.png";
+import axios from "axios";
+import Pagination from "react-js-pagination";
+import { Table } from "react-bootstrap";
+import { useNavigate, Link } from "react-router-dom";
 
 function Store() {
-  const [products, setProducts] = useState([]);
+  const history = useNavigate();
+  const [id, setId] = useState("");
+  const [mystorelist, setmystorelist] = useState([]);
+  const [page, setPage] = useState(0);
+  const [totalCnt, setTotalCnt] = useState(0);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    // API 호출 등을 통해 데이터를 가져온다
-    const data = [
-      { id: 1, name: '상품1', price: 10000, description: '상품 설명' },
-      { id: 2, name: '상품2', price: 20000, description: '상품 설명' }
-    ];
+    const str = localStorage.getItem('login');
+    if (str !== null) {
+      const login = JSON.parse(str);
+      setId(login.memId);
+    } else {
+      alert('login을 해주세요.');
+      history('/login');
+    }
+  }, [history, setId]);
 
-    setProducts(data);
-  }, []);
+  function getstorelist() {
+    axios
+      .get("http://localhost:3000/my_orderlist", {
+        params: { "memId": id }
+      })
+      .then(function(resp) {
+        const data = resp.data;
+        // console.log(data);
+
+          // console.log(data);
+          // console.log(data.list);
+          setmystorelist(data);
+          setTotalCnt(data.cnt);
+
+      })
+      .catch(function(err) {
+        alert(err);
+      });
+  }
+
+  useEffect(() => {
+    if (id) {
+      getstorelist();
+    }
+  }, [id]);
+
+  function pageChange(page) {
+    setPage(page);
+    getstorelist();
+  }
+
+  function searchBtn() {
+    setPage(1); // 검색 시 첫 페이지로 초기화
+    getstorelist();
+  }  
 
   return (
     <div className="members container">
-    <h4 className="title">내 스토어</h4>
-    <br />
-    <div className="inform outline" />
-    <br />
-      {/* <ul>
-        {products.map((product) => (
-          <li key={product.id}>
-            <img src={product.image} alt={product.name} />
-            <p>{product.name}</p>
-            <p>{product.price}원</p>
-            <p>{product.description}</p>
-          </li>
-        ))}
-      </ul> */}
-      {/* <img src="../../../../../public/assets/img/dalrun-sh/shoes.png" alt="나이키" /> */}
-      <img src={shoes} />
-      <p>상품명 : 나이키</p>
-      <p>가격   : 75,000</p>
-      <p>런닝을 위한 최적화 맞춤형 신발</p>
-
-      {/* <img src="../../../../../public/assets/img/dalrun-sh/cloth.png" alt="바람막이" /> */}
-      <img src={cloth} />
-      <p>상품명 : 데쌍트</p>
-      <p>가격   : 125,000</p>
-      <p>바람의 저항을 최소화 시켜주는 최강바람막이</p>
-
+      <br /><br /><br /><br /><br /><br />
+      <h4 className="title">내 스토어 목록</h4>
+      <br />
+      <div className="inform outline" />
+      <br />
+      <div className="store">
+        <div className="store-content">
+          <div className="info">
+            {/* <div className="search-content">
+              <span className="search-title">검색어</span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="검색어"
+              />
+              <button onClick={searchBtn}>검색</button>
+            </div> */}
+            <br />
+            <div className="info_con">
+              <Table responsive hover>
+                <thead>
+                  <tr>
+                    <th>주문번호</th>
+                    <th>상품명</th>
+                    <th>주문수량</th>
+                    <th>금액</th>
+                    <th>총액</th>
+                    <th>주문일자</th>
+                    <th>상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    mystorelist && mystorelist.length !== 0 ? (
+                    mystorelist.map((msl, i) => {
+                      return (
+                        <tr key={i}>
+                          <th>{msl.orderNumber}</th>
+                          {/* <th>{msl.productName}</th> */}
+                          <th>
+                            <Link to={'http://localhost:9200/store-details/PUMA-AMSN'}>{msl.productName}</Link>
+                          </th>                          
+                          <th>{msl.productQuantity}</th>
+                          <th>{msl.productPrice}</th>
+                          <th>{msl.orderTotalprice}</th>
+                          <th>{msl.orderDate}</th>
+                          <th>{msl.orderState  === 0 ? "배송준비" : "배송완료"}</th>
+                        </tr>
+                      );
+                    })
+                      ) : (
+                        <tr style={{ textAlign: "center" }}>
+                          <td colSpan="7">
+                            {mystorelist === undefined
+                              ? "데이터를 로딩 중입니다."
+                              : `${id} 데이터가 없습니다.`}
+                          </td>
+                        </tr>
+                    )}
+                  </tbody>
+                </Table>
+                <Pagination
+                  activePage={page}
+                  itemsCountPerPage={10}
+                  totalItemsCount={totalCnt}
+                  pageRangeDisplayed={5}
+                  prevPageText={"<"}
+                  nextPageText={">"}
+                  onChange={pageChange} />
+              </div>
+            </div>
+        </div>
+      </div>
     </div>
   );
 }  

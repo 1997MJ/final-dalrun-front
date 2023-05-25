@@ -1,14 +1,17 @@
 import React from "react";
 import { Helmet } from "react-helmet";
 import BlogSidebarPost from "../../../../components/blog/blog-sidebar/BlogSidebarPost";
-import BlogFive from "../../../../components/dalrun-hc/review/BlogFive";
-import BlogFour from "../../../../components/dalrun-hc/review/BlogFour";
-import Pagination from "../../../../components/blog/Pagination";
-import CopyRight from "../../../../components/footer/copyright/CopyRight";
-import Footer from "../../../../components/footer/Footer";
-import HeaderDefault from "../../../../components/header/HeaderDefault";
 
-const BlogSidebar = () => {
+
+import Pagination from "../../../../components/blog/Pagination";
+import CopyRight from "../../../../components/dalrun-jy/footer/CopyRight";
+
+import HeadermainPage from "../../../../components/dalrun-jy/HeadermainPage";
+import BlogFour from "../../../../components/dalrun-hc/review/Review1Row";
+import BlogFive from "../../../../components/dalrun-hc/review/Review2Row";
+import SearchBlog from "../../../../components/dalrun-hc/review/ReviewSearch";
+
+const ReviewMain = () => {
   return (
     <div className="ptf-site-wrapper animsition ptf-is--blog-sidebar">
       <Helmet>
@@ -16,7 +19,7 @@ const BlogSidebar = () => {
       </Helmet>
       {/* End Page SEO Content */}
       <div className="ptf-site-wrapper__inner">
-        <HeaderDefault />
+        <HeadermainPage />
         {/* End  HeaderHomeDefault */}
 
         <div className="main">
@@ -85,6 +88,7 @@ const BlogSidebar = () => {
             Start Blog With Sidebar  Section 
             ============================================== */}
             <section>
+
               {/* <!--Spacer--> */}
               <div
                 className="ptf-spacer"
@@ -92,7 +96,28 @@ const BlogSidebar = () => {
               ></div>
               <div className="container-xxl">
                 <div className="row">
-                  <div className="col-xl-8">
+
+
+                  {/* <!--Widget--> */}
+                  <div className="ptf-widget ptf-widget-search">
+                    {/* <!--Animated Block--> */}
+                    <div className="ptf-animated-block" data-aos="fade" data-aos-delay="0">
+                      <h4 className="ptf-widget-title">Search</h4>
+                      <SearchBlog />
+                    </div>
+                  </div>
+                  {/* <!--Widget--> */}
+
+
+
+                  <div
+                    className="ptf-spacer"
+                    style={{ "--ptf-xxl": "1.5rem", "--ptf-md": "3.75rem" }}
+                  ></div>
+
+
+
+                  <div className="col-xl-12">
                     {/* <!--Animated Block--> */}
                     <div
                       className="ptf-animated-block"
@@ -115,11 +140,13 @@ const BlogSidebar = () => {
                     <Pagination />
                   </div>
                   {/* Blog grid  */}
+                  {/* 
                   <div className="col-xl-4">
                     <div className="ptf-sidebar ptf-sidebar--right">
                       <BlogSidebarPost />
                     </div>
-                  </div>
+                  </div> 
+                  */}
                   {/* End sidebar */}
                 </div>
               </div>
@@ -138,9 +165,7 @@ const BlogSidebar = () => {
       {/* <!--Footer--> */}
       <footer className="ptf-footer ptf-footer--style-1">
         <div className="container-xxl">
-          <div className="ptf-footer__top">
-            <Footer />
-          </div>
+         
           <div className="ptf-footer__bottom">
             <CopyRight />
           </div>
@@ -151,4 +176,4 @@ const BlogSidebar = () => {
   );
 };
 
-export default BlogSidebar;
+export default ReviewMain;

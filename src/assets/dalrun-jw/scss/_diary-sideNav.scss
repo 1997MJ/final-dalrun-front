@@ -1,7 +1,6 @@
 ﻿$icon-color: #212529; // 아이콘 색상
-$icon-hover-color: #0d6efd; // 아이콘 호버 색상
-$link-color: #0d6efd; // 링크 색상
-$link-hover-color: #0a58ca; // 링크 호버 색상
+$btn-color: #343a40; // 링크 색상
+$btn-hover-color: #94f1dd; // 링크 호버 색상
 $bg-color: #343a40; // 배경 색상
 
 .diary-navbar-container{
@@ -15,32 +14,30 @@ $bg-color: #343a40; // 배경 색상
     padding: 0;
 
     .logo {
-        width: 100px;
+        width: 150px;
         padding: 0.5rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.2rem;
         padding-bottom: 1rem;
-        border-bottom: 1px solid #ccc;
     }
 
     .logo-Link {
         display: inline;
+        margin-top: 1rem;
         padding: 0;
+        border-bottom: 1px solid #ccc;
     }
 
     .nav-item{
-        display: block;
+        //display: block;
         flex: none;
         height: 6.5rem;
         text-align: center;
-        margin: 0;
-        margin-left: 0;
-        margin-right: 0;
         padding-top: 1rem;
-        z-index: 1;
+        background-color: $bg-color;
 
         &:hover{
             opacity: 0.7;
-            background-color: #deea74;
+            background-color: #94f1dd;
         }
     }
     
@@ -54,8 +51,17 @@ $bg-color: #343a40; // 배경 색상
         white-space: pre-wrap;
     };
 
-    Link{
-        display: block;
+    button{
+        margin-top : -1rem;
+        margin-left: -0.2rem;
+        width: 80px;
+        height: 97px;
+        border: none;
+        background-color: $bg-color;
+        &:hover {
+        opacity: 0.7;
+        background-color: #94f1dd;
+        }
     }
 
     .dropup-container {
